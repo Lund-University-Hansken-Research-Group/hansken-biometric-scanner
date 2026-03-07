@@ -1,0 +1,13 @@
+# Core dependencies
+python >= 3.8
+
+# No external dependencies required
+# The scanner uses only Python standard library:
+# - pathlib
+# - re
+# - json
+# - sqlite3
+# - xml.etree.ElementTree
+# - concurrent.futures
+# - dataclasses
+# - datetime
