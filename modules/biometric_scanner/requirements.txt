@@ -1,13 +1,8 @@
 # Core dependencies
 python >= 3.8
 
-# No external dependencies required
-# The scanner uses only Python standard library:
-# - pathlib
-# - re
-# - json
-# - sqlite3
-# - xml.etree.ElementTree
-# - concurrent.futures
-# - dataclasses
-# - datetime
+# Hansken extraction plugin SDK
+hansken-extraction-plugin-sdk
+
+# Scientific computing (for numpy array detection)
+numpy
