@@ -27,6 +27,11 @@ COPY --from=builder /venv /venv
 ENV PATH="/venv/bin:$PATH"
 
 COPY plugin.py /app/
+COPY patterns.json /app/
+
+# Custom patterns can be mounted at runtime:
+# docker run -v /path/to/custom-patterns.json:/app/patterns.json ...
+
 EXPOSE 8999
 ENTRYPOINT ["serve_plugin", "-v"]
 CMD ["/app/plugin.py", "8999"]

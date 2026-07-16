@@ -1,0 +1,14 @@
+{
+  "faceRecognition": {
+    "extensions": [".pkl", ".pickle", ".dat", ".pb", ".pt", ".pth", ".h5"],
+    "patterns": ["face", "facial", "dlib", "facenet", "arcface", "retina", "vgg", "embedding", "encodings"]
+  },
+  "voiceBiometric": {
+    "extensions": [".wav", ".m4a", ".mp3", ".pt", ".pb", ".h5"],
+    "patterns": ["voice", "speaker", "voiceprint", "xvector", "speech", "audio_embedding"]
+  },
+  "embeddingCache": {
+    "extensions": [".npy", ".npz", ".pkl", ".pickle", ".json", ".csv"],
+    "patterns": ["embedding", "embeddings", "encoding", "encodings"]
+  }
+}

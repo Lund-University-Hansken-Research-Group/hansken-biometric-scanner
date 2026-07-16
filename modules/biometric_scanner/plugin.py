@@ -1,3 +1,5 @@
+import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -10,38 +12,17 @@ from logbook import Logger
 log = Logger(__name__)
 
 
-FACE_MODEL_EXTENSIONS = {
-    '.pkl', '.pickle',
-    '.dat',  # dlib shape_predictor
-    '.pb',   # TensorFlow protobuf
-    '.pt', '.pth',  # PyTorch
-    '.h5',   # Keras
-    '.caffemodel',  # Caffe
-    '.uff',  # TensorRT
+DEFAULT_EXTENSIONS = {
+    'faceRecognition': {'.pkl', '.pickle', '.dat', '.pb', '.pt', '.pth', '.h5', '.caffemodel', '.uff'},
+    'voiceBiometric': {'.pt', '.pth', '.pb', '.h5', '.wav', '.m4a', '.mp3', '.pkl', '.pickle'},
+    'embeddingCache': {'.npy', '.npz', '.pkl', '.pickle', '.json', '.csv'},
 }
 
-AUDIO_MODEL_EXTENSIONS = {
-    '.pt', '.pth', '.pb', '.h5',
-    '.wav', '.m4a', '.mp3',
-    '.pkl', '.pickle',
+DEFAULT_PATTERNS = {
+    'faceRecognition': ['face', 'facial', 'dlib', 'facenet', 'arcface', 'retina', 'vgg', 'embedding', 'encodings'],
+    'voiceBiometric': ['voice', 'speaker', 'voiceprint', 'xvector', 'speech', 'audio_embedding'],
+    'embeddingCache': ['embedding', 'embeddings', 'encoding', 'encodings'],
 }
-
-EMBEDDING_CACHE_EXTENSIONS = {
-    '.npy', '.npz',
-    '.pkl', '.pickle',
-    '.json',
-    '.csv',
-}
-
-TRAINING_DATA_PATTERNS = [
-    'embedding', 'embeddings', 'encoding', 'encodings',
-    'face', 'faces', 'facial',
-    'voice', 'speaker', 'voiceprint',
-    'dlib', 'facenet', 'arcface', 'retinaface',
-    'resnet', 'vggface', 'facenet',
-    'xvector', 'x-vector', 'speaker_embedding',
-    'verification', 'identification',
-]
 
 MODEL_FRAMEWORKS = {
     'dlib': ['dlib', 'shape_predictor'],
@@ -53,7 +34,44 @@ MODEL_FRAMEWORKS = {
 }
 
 
+def load_patterns():
+    patterns_path = os.environ.get('BIOMETRIC_PATTERNS_PATH', '/app/patterns.json')
+    try:
+        with open(patterns_path, 'r') as f:
+            custom = json.load(f)
+        log.info(f'Loaded custom patterns from {patterns_path}')
+        return custom
+    except FileNotFoundError:
+        log.debug(f'No custom patterns found at {patterns_path}, using defaults')
+        return None
+    except json.JSONDecodeError as e:
+        log.warning(f'Failed to parse patterns file: {e}')
+        return None
+
+
 class BiometricModelsPlugin(ExtractionPlugin):
+
+    def __init__(self):
+        super().__init__()
+        self._custom_patterns = load_patterns()
+        self._extensions = self._build_extensions()
+        self._patterns = self._build_patterns()
+
+    def _build_extensions(self):
+        ext = {k: v.copy() for k, v in DEFAULT_EXTENSIONS.items()}
+        if self._custom_patterns:
+            for bt, config in self._custom_patterns.items():
+                if 'extensions' in config:
+                    ext.setdefault(bt, set()).update(config['extensions'])
+        return ext
+
+    def _build_patterns(self):
+        pat = {k: v.copy() for k, v in DEFAULT_PATTERNS.items()}
+        if self._custom_patterns:
+            for bt, config in self._custom_patterns.items():
+                if 'patterns' in config:
+                    pat.setdefault(bt, []).extend(config['patterns'])
+        return pat
 
     def plugin_info(self):
         plugin_info = PluginInfo(
@@ -62,22 +80,20 @@ class BiometricModelsPlugin(ExtractionPlugin):
             description='Detect pre-computed biometric models and embedding caches',
             author=Author('Biometric Scanner', 'biometric@example.com', 'NFI'),
             maturity=MaturityLevel.PROOF_OF_CONCEPT,
-            webpage_url='https://github.com/dp/hansken-biometric-scanner',
-            matcher=(
-                'file.extension=pkl OR file.extension=pickle OR '
-                'file.extension=dat OR '
-                'file.extension=pb OR '
-                'file.extension=pt OR file.extension=pth OR '
-                'file.extension=h5 OR '
-                'file.extension=npy OR file.extension=npz OR '
-                'file.extension=json OR '
-                'file.extension=wav OR file.extension=m4a OR file.extension=mp3'
-            ),
+            webpage_url='https://github.com/Lund-University-Hansken-Research-Group/hansken-biometric-scanner',
+            matcher=self._build_matcher(),
             license='Apache License 2.0'
         )
         log.info('pluginInfo request')
         log.debug(f'returning plugin info: {plugin_info}')
         return plugin_info
+
+    def _build_matcher(self):
+        all_extensions = set()
+        for exts in self._extensions.values():
+            all_extensions.update(exts)
+        matcher_parts = [f'file.extension={ext.lstrip(".")}' for ext in sorted(all_extensions)]
+        return ' OR '.join(matcher_parts)
 
     def process(self, trace, data_context):
         file_name = trace.get('file.name')
@@ -121,19 +137,12 @@ class BiometricModelsPlugin(ExtractionPlugin):
         return True
 
     def _detect_type(self, ext, name_lower):
-        if ext in FACE_MODEL_EXTENSIONS:
-            if any(p in name_lower for p in ['face', 'facial', 'dlib', 'facenet', 'arcface', 'retina', 'vgg']):
-                return 'faceRecognition'
-            return 'unknownBiometricModel'
-
-        if ext in AUDIO_MODEL_EXTENSIONS:
-            if any(p in name_lower for p in ['voice', 'speaker', 'voiceprint', 'xvector', 'speech']):
-                return 'voiceBiometric'
-            return 'unknownAudioModel'
-
-        if ext in EMBEDDING_CACHE_EXTENSIONS:
-            if any(p in name_lower for p in TRAINING_DATA_PATTERNS):
-                return 'embeddingCache'
+        for bt, extensions in self._extensions.items():
+            if ext in extensions:
+                patterns = self._patterns.get(bt, [])
+                if any(p in name_lower for p in patterns):
+                    return bt
+                return f'unknown{bt}'
 
         if ext in {'.pkl', '.pickle'}:
             return self._check_pickle_content(name_lower)
@@ -155,8 +164,9 @@ class BiometricModelsPlugin(ExtractionPlugin):
         return 'unknown'
 
     def _check_pickle_content(self, name_lower):
-        if any(p in name_lower for p in TRAINING_DATA_PATTERNS):
-            return 'embeddingCache'
+        for patterns in self._patterns.values():
+            if any(p in name_lower for p in patterns):
+                return 'embeddingCache'
         return 'unknownPickle'
 
     def _check_embedding_content(self, trace, data_context):
@@ -170,8 +180,9 @@ class BiometricModelsPlugin(ExtractionPlugin):
             if isinstance(data, dict):
                 for key in data.keys():
                     key_lower = key.lower()
-                    if any(p in key_lower for p in TRAINING_DATA_PATTERNS):
-                        return True
+                    for patterns in self._patterns.values():
+                        if any(p in key_lower for p in patterns):
+                            return True
             elif isinstance(data, (list, tuple)):
                 return True
         except Exception:
