@@ -60,7 +60,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
             id=PluginId('biometric_scanner', 'models', 'BiometricModelsPlugin'),
             version='1.0.0',
             description='Detect pre-computed biometric models and embedding caches',
-            author=Author('Biometric Scanner', '', 'NFI'),
+            author=Author('Biometric Scanner', 'biometric@example.com', 'NFI'),
             maturity=MaturityLevel.PROOF_OF_CONCEPT,
             webpage_url='https://github.com/dp/hansken-biometric-scanner',
             matcher=(

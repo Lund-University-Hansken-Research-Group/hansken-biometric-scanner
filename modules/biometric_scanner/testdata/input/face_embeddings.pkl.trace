@@ -1,0 +1,14 @@
+{
+  "trace": {
+    "name": "face_embeddings.pkl",
+    "data": {
+      "raw": {
+        "mimeClass": "binary"
+      }
+    },
+    "file": {
+      "name": "face_embeddings.pkl",
+      "extension": "pkl"
+    }
+  }
+}
