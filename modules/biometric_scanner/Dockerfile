@@ -26,8 +26,7 @@ FROM python:3.13-slim
 COPY --from=builder /venv /venv
 ENV PATH="/venv/bin:$PATH"
 
-COPY plugin.py /app/
-COPY patterns.json /app/
+COPY plugin.py patterns.json /app/
 
 # Custom patterns can be mounted at runtime:
 # docker run -v /path/to/custom-patterns.json:/app/patterns.json ...

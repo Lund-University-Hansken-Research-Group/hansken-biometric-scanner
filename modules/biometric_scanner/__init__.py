@@ -1,5 +1,4 @@
-from .scanner import BiometricScanner
-from .config import BiometricConfig, DEFAULT_CONFIG
+from .plugin import BiometricModelsPlugin, PLUGIN_VERSION
 
-__version__ = "1.0.0"
-__all__ = ["BiometricScanner", "BiometricConfig", "DEFAULT_CONFIG"]
+__version__ = PLUGIN_VERSION
+__all__ = ['BiometricModelsPlugin']

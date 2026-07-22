@@ -1,17 +1,17 @@
 {
-  "trace": {
-    "id": "0",
-    "name": "test-input-trace",
-    "path": "/test-input-trace",
-    "file": {
-      "extension": "pkl",
-      "name": "face_embeddings.pkl",
-      "misc": {
-        "biometricModelType": "faceRecognition",
-        "biometricModelFramework": "unknown",
-        "biometricModelDetectedBy": "extension_pattern",
-        "biometricModelConfidence": "high"
-      }
+  "trace" : {
+    "id" : "0",
+    "name" : "test-input-trace",
+    "path" : "/test-input-trace",
+    "file" : {
+      "misc" : {
+        "biometricModelConfidence" : "high",
+        "biometricModelDetectedBy" : "pickle_opcode_analysis",
+        "biometricModelFramework" : "unknown",
+        "biometricModelType" : "faceRecognition"
+      },
+      "extension" : "pkl",
+      "name" : "face_embeddings.pkl"
     }
   }
 }
