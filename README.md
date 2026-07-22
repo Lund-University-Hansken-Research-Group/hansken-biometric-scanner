@@ -34,4 +34,4 @@ Extend detection with `patterns.json` (mounted at `/app/patterns.json` in Docker
 
 ## License
 
-Apache License 2.0 — [Lund University Hansken Research Group](https://github.com/Lund-University-Hansken-Research-Group)
+GNU General Public License v3.0 — [Lund University Hansken Research Group](https://github.com/Lund-University-Hansken-Research-Group)

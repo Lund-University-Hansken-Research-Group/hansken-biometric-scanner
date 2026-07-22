@@ -203,7 +203,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
                 'hansken-biometric-scanner'
             ),
             matcher=self._build_matcher(),
-            license='Apache License 2.0',
+            license='GNU General Public License v3.0',
             resources=PluginResources(
                 maximum_cpu=1,
                 maximum_memory=512,
