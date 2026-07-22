@@ -87,9 +87,9 @@ class BiometricModelsPlugin(ExtractionPlugin):
     def plugin_info(self):
         plugin_info = PluginInfo(
             id=PluginId('biometric_scanner', 'models', 'BiometricModelsPlugin'),
-            version='1.2.0',
+            version='1.2.1',
             description='Detect pre-computed biometric models and embedding caches',
-            author=Author('Biometric Scanner', 'biometric@example.com', 'NFI'),
+            author=Author('Lund University Hansken Research Group', 'dylan.pashley@svet.lu.se', 'LU'),
             maturity=MaturityLevel.PROOF_OF_CONCEPT,
             webpage_url='https://github.com/Lund-University-Hansken-Research-Group/hansken-biometric-scanner',
             matcher=self._build_matcher(),
