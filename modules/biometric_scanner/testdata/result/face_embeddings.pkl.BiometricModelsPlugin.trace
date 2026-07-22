@@ -13,19 +13,5 @@
       "detectedBy": "extension_pattern",
       "confidence": "high"
     }
-  },
-  "children": [
-    {
-      "trace": {
-        "id": "0-0",
-        "name": "modelInfo",
-        "path": "/test-input-trace/modelInfo",
-        "modelInfo": {
-          "type": "faceRecognition",
-          "framework": "unknown",
-          "fileExtension": ".pkl"
-        }
-      }
-    }
-  ]
+  }
 }
