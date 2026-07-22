@@ -5,13 +5,13 @@
     "path": "/test-input-trace",
     "file": {
       "extension": "pkl",
-      "name": "test.pkl"
-    },
-    "misc": {
-      "biometricModelType": "faceRecognition",
-      "biometricModelFramework": "unknown",
-      "biometricModelDetectedBy": "content_analysis",
-      "biometricModelConfidence": "high"
+      "name": "test.pkl",
+      "misc": {
+        "biometricModelType": "faceRecognition",
+        "biometricModelFramework": "unknown",
+        "biometricModelDetectedBy": "content_analysis",
+        "biometricModelConfidence": "high"
+      }
     }
   }
 }

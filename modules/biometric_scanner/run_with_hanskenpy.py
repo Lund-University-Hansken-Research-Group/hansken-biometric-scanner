@@ -17,10 +17,10 @@ def search_results(context):
     """Search for traces enriched by the plugin."""
     with context:
         print("=" * 60)
-        print("Searching for misc.biometricModelType=*")
+        print("Searching for file.misc.biometricModelType=*")
         print("=" * 60)
 
-        results = context.search('misc.biometricModelType=*')
+        results = context.search('file.misc.biometricModelType=*')
         count = 0
         for trace in results:
             count += 1
@@ -28,19 +28,19 @@ def search_results(context):
             print(f"  uid:  {trace.uid}")
             print(f"  name: {trace.name}")
             print(f"  path: {trace.get('file.path')}")
-            print(f"  misc.biometricModelType:       {trace.get('misc.biometricModelType')}")
-            print(f"  misc.biometricModelFramework:   {trace.get('misc.biometricModelFramework')}")
-            print(f"  misc.biometricModelDetectedBy: {trace.get('misc.biometricModelDetectedBy')}")
-            print(f"  misc.biometricModelConfidence: {trace.get('misc.biometricModelConfidence')}")
+            print(f"  file.misc.biometricModelType:       {trace.get('file.misc.biometricModelType')}")
+            print(f"  file.misc.biometricModelFramework:   {trace.get('file.misc.biometricModelFramework')}")
+            print(f"  file.misc.biometricModelDetectedBy: {trace.get('file.misc.biometricModelDetectedBy')}")
+            print(f"  file.misc.biometricModelConfidence: {trace.get('file.misc.biometricModelConfidence')}")
 
         if count == 0:
-            print("\nNo traces found with misc.biometricModelType set.")
+            print("\nNo traces found with file.misc.biometricModelType set.")
             print("\nSearching for all .pkl files instead:")
 
             pkl_results = context.search('file.extension=pkl')
             for trace in pkl_results:
                 print(f"  {trace.uid}  {trace.name}  ext={trace.get('file.extension')}")
-                print(f"    misc.biometricModelType = {trace.get('misc.biometricModelType')}")
+                print(f"    file.misc.biometricModelType = {trace.get('file.misc.biometricModelType')}")
 
         print(f"\nTotal: {count} traces with biometric model properties")
 

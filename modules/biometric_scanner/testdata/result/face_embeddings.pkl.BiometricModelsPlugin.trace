@@ -5,13 +5,13 @@
     "path": "/test-input-trace",
     "file": {
       "extension": "pkl",
-      "name": "face_embeddings.pkl"
-    },
-    "misc": {
-      "biometricModelType": "faceRecognition",
-      "biometricModelFramework": "unknown",
-      "biometricModelDetectedBy": "extension_pattern",
-      "biometricModelConfidence": "high"
+      "name": "face_embeddings.pkl",
+      "misc": {
+        "biometricModelType": "faceRecognition",
+        "biometricModelFramework": "unknown",
+        "biometricModelDetectedBy": "extension_pattern",
+        "biometricModelConfidence": "high"
+      }
     }
   }
 }

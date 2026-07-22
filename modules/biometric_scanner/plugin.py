@@ -87,7 +87,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
     def plugin_info(self):
         plugin_info = PluginInfo(
             id=PluginId('biometric_scanner', 'models', 'BiometricModelsPlugin'),
-            version='1.4.0',
+            version='1.4.1',
             description='Detect pre-computed biometric models and embedding caches',
             author=Author('Lund University Hansken Research Group', 'dylan.pashley@svet.lu.se', 'LU'),
             maturity=MaturityLevel.PROOF_OF_CONCEPT,
@@ -148,10 +148,10 @@ class BiometricModelsPlugin(ExtractionPlugin):
         else:
             confidence = 'low'
 
-        trace.update('misc.biometricModelType', model_type)
-        trace.update('misc.biometricModelFramework', framework)
-        trace.update('misc.biometricModelDetectedBy', detected_by)
-        trace.update('misc.biometricModelConfidence', confidence)
+        trace.update('file.misc.biometricModelType', model_type)
+        trace.update('file.misc.biometricModelFramework', framework)
+        trace.update('file.misc.biometricModelDetectedBy', detected_by)
+        trace.update('file.misc.biometricModelConfidence', confidence)
 
         return True
 
