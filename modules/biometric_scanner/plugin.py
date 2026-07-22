@@ -33,6 +33,17 @@ MODEL_FRAMEWORKS = {
     'scikit': ['sklearn', 'scikit'],
 }
 
+FACE_EMBEDDING_DIMS = [128, 256, 512, 1024]
+
+BIOMETRIC_CONTENT_KEYWORDS = [
+    'encodings', 'embeddings', 'faces', 'face_encodings',
+    'face_embeddings', 'facevector', 'facenet', 'dlib_encodings',
+]
+
+NAME_CONTENT_KEYWORDS = [
+    'names', 'labels', 'ids', 'identities', 'persons', 'people', 'subjects',
+]
+
 
 def load_patterns():
     patterns_path = os.environ.get('BIOMETRIC_PATTERNS_PATH', '/app/patterns.json')
@@ -76,7 +87,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
     def plugin_info(self):
         plugin_info = PluginInfo(
             id=PluginId('biometric_scanner', 'models', 'BiometricModelsPlugin'),
-            version='1.0.0',
+            version='1.1.0',
             description='Detect pre-computed biometric models and embedding caches',
             author=Author('Biometric Scanner', 'biometric@example.com', 'NFI'),
             maturity=MaturityLevel.PROOF_OF_CONCEPT,
@@ -96,7 +107,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
         return ' OR '.join(matcher_parts)
 
     def process(self, trace, data_context):
-        file_name = trace.get('file.name')
+        file_name = trace.get('file.name') or trace.get('name') or ''
         file_path = Path(file_name) if file_name else None
         ext = file_path.suffix.lower() if file_path else ''
         name_lower = file_name.lower() if file_name else ''
@@ -116,20 +127,28 @@ class BiometricModelsPlugin(ExtractionPlugin):
             return False
 
         framework = self._detect_framework(name_lower, ext)
+        detected_by = 'extension_pattern'
 
-        trace.update('biometricModel.type', model_type)
-        trace.update('biometricModel.framework', framework)
-        trace.update('biometricModel.detectedBy', 'extension_pattern')
-
-        if model_type == 'faceRecognition':
+        if model_type.startswith('unknown') and ext in {'.pkl', '.pickle'}:
+            content_type, content_confidence, content_detected_by = self._detect_from_content(trace)
+            if content_type:
+                model_type = content_type
+                confidence = content_confidence
+                detected_by = content_detected_by
+            else:
+                confidence = 'low'
+        elif model_type == 'embeddingCache':
+            confidence = self._check_embedding_content(trace, data_context)
+        elif model_type == 'faceRecognition':
             confidence = 'high'
         elif model_type == 'voiceBiometric':
             confidence = 'medium'
-        elif model_type == 'embeddingCache':
-            confidence = self._check_embedding_content(trace, data_context)
         else:
             confidence = 'low'
 
+        trace.update('biometricModel.type', model_type)
+        trace.update('biometricModel.framework', framework)
+        trace.update('biometricModel.detectedBy', detected_by)
         trace.update('biometricModel.confidence', confidence)
 
         self._add_child_details(trace, model_type, framework, ext)
@@ -143,11 +162,51 @@ class BiometricModelsPlugin(ExtractionPlugin):
                 if any(p in name_lower for p in patterns):
                     return bt
                 return f'unknown{bt}'
-
-        if ext in {'.pkl', '.pickle'}:
-            return self._check_pickle_content(name_lower)
-
         return None
+
+    def _detect_from_content(self, trace):
+        try:
+            data = self._load_pickle(trace)
+        except Exception as e:
+            log.debug(f"Failed to load pickle for content analysis: {e}")
+            return None, None, None
+
+        detections = []
+
+        if isinstance(data, dict):
+            keys = list(data.keys())
+
+            for key in keys:
+                key_lower = key.lower()
+                if any(kw in key_lower for kw in BIOMETRIC_CONTENT_KEYWORDS):
+                    value = data[key]
+                    if isinstance(value, (list, tuple)):
+                        for item in value[:5]:
+                            if isinstance(item, np.ndarray):
+                                dim = item.shape[-1] if item.ndim > 0 else 0
+                                if dim in FACE_EMBEDDING_DIMS:
+                                    detections.append(f"{dim}-dim encoding arrays")
+                                    break
+                            elif isinstance(item, (list, tuple)) and len(item) in FACE_EMBEDDING_DIMS:
+                                detections.append(f"{len(item)}-dim encoding list")
+                                break
+
+            if any(kw in str(keys).lower() for kw in NAME_CONTENT_KEYWORDS):
+                detections.append("names/labels field")
+
+        elif isinstance(data, (list, tuple)):
+            for item in data[:5]:
+                if isinstance(item, np.ndarray):
+                    dim = item.shape[-1] if item.ndim > 0 else 0
+                    if dim in FACE_EMBEDDING_DIMS:
+                        detections.append(f"{dim}-dim encoding arrays")
+                        break
+
+        if detections:
+            model_type = 'faceRecognition' if 'encoding arrays' in ' '.join(detections) or 'encoding list' in ' '.join(detections) else 'embeddingCache'
+            return model_type, 'high', 'content_analysis'
+
+        return None, None, None
 
     def _detect_framework(self, name_lower, ext):
         for fw, patterns in MODEL_FRAMEWORKS.items():
@@ -163,12 +222,6 @@ class BiometricModelsPlugin(ExtractionPlugin):
             return 'dlib'
         return 'unknown'
 
-    def _check_pickle_content(self, name_lower):
-        for patterns in self._patterns.values():
-            if any(p in name_lower for p in patterns):
-                return 'embeddingCache'
-        return 'unknownPickle'
-
     def _check_embedding_content(self, trace, data_context):
         if self._has_embedding_pattern(trace, data_context):
             return 'high'
@@ -176,7 +229,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
 
     def _has_embedding_pattern(self, trace, data_context):
         try:
-            data = self._load_pickle(trace, data_context)
+            data = self._load_pickle(trace)
             if isinstance(data, dict):
                 for key in data.keys():
                     key_lower = key.lower()
@@ -189,7 +242,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
             pass
         return False
 
-    def _load_pickle(self, trace, data_context):
+    def _load_pickle(self, trace):
         data_stream = trace.open()
         return Unpickler(data_stream).load()
 
