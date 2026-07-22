@@ -7,11 +7,11 @@
       "extension": "pkl",
       "name": "test.pkl"
     },
-    "biometricModel": {
-      "type": "faceRecognition",
-      "framework": "unknown",
-      "detectedBy": "content_analysis",
-      "confidence": "high"
+    "misc": {
+      "biometricModelType": "faceRecognition",
+      "biometricModelFramework": "unknown",
+      "biometricModelDetectedBy": "content_analysis",
+      "biometricModelConfidence": "high"
     }
   }
 }

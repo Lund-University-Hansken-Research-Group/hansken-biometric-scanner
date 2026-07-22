@@ -7,11 +7,11 @@
       "extension": "pkl",
       "name": "face_embeddings.pkl"
     },
-    "biometricModel": {
-      "type": "faceRecognition",
-      "framework": "unknown",
-      "detectedBy": "extension_pattern",
-      "confidence": "high"
+    "misc": {
+      "biometricModelType": "faceRecognition",
+      "biometricModelFramework": "unknown",
+      "biometricModelDetectedBy": "extension_pattern",
+      "biometricModelConfidence": "high"
     }
   }
 }
