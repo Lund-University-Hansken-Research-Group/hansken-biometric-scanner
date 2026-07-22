@@ -87,7 +87,7 @@ class BiometricModelsPlugin(ExtractionPlugin):
     def plugin_info(self):
         plugin_info = PluginInfo(
             id=PluginId('biometric_scanner', 'models', 'BiometricModelsPlugin'),
-            version='1.1.0',
+            version='1.2.0',
             description='Detect pre-computed biometric models and embedding caches',
             author=Author('Biometric Scanner', 'biometric@example.com', 'NFI'),
             maturity=MaturityLevel.PROOF_OF_CONCEPT,
@@ -104,7 +104,8 @@ class BiometricModelsPlugin(ExtractionPlugin):
         for exts in self._extensions.values():
             all_extensions.update(exts)
         matcher_parts = [f'file.extension={ext.lstrip(".")}' for ext in sorted(all_extensions)]
-        return ' OR '.join(matcher_parts)
+        extension_matcher = ' OR '.join(matcher_parts)
+        return f'({extension_matcher}) OR $data.type:raw'
 
     def process(self, trace, data_context):
         file_name = trace.get('file.name') or trace.get('name') or ''
@@ -113,6 +114,11 @@ class BiometricModelsPlugin(ExtractionPlugin):
         name_lower = file_name.lower() if file_name else ''
 
         log.info(f"processing trace {file_name}")
+
+        if not ext:
+            ext = self._detect_pickle_extension(trace)
+            if ext:
+                log.info(f"Detected pickle file by magic bytes, treating as {ext}")
 
         detected = self._detect_biometric_model(ext, name_lower, trace, data_context)
 
@@ -163,6 +169,17 @@ class BiometricModelsPlugin(ExtractionPlugin):
                     return bt
                 return f'unknown{bt}'
         return None
+
+    def _detect_pickle_extension(self, trace):
+        try:
+            data_stream = trace.open()
+            header = data_stream.read(2)
+            data_stream.close()
+            if len(header) >= 2 and header[0] == 0x80 and 2 <= header[1] <= 5:
+                return '.pkl'
+        except Exception:
+            pass
+        return ''
 
     def _detect_from_content(self, trace):
         try:
